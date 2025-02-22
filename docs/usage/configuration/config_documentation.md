@@ -2592,6 +2592,14 @@ This is primarily intended for use with the `register_new_matrix_user` script
 (see [Registering a user](../../setup/installation.md#registering-a-user));
 however, the interface is [documented](../../admin_api/register_api.html).
 
+Replacing an existing `registration_shared_secret` with a new one requires users
+of the [Shared-Secret Registration API](../../admin_api/register_api.html) to
+start using the new secret for requesting any further one-time nonces.
+
+> ⚠️ **Warning** – The additional consequences of replacing
+> [`macaroon_secret_key`](#macaroon_secret_key) will apply in case it delegates
+> to `registration_shared_secret`.
+
 See also [`registration_shared_secret_path`](#registration_shared_secret_path).
 
 Example configuration:
@@ -3168,6 +3176,11 @@ A secret which is used to sign
 If none is specified, the `registration_shared_secret` is used, if one is given;
 otherwise, a secret key is derived from the signing key.
 
+> ⚠️ **Warning** – Replacing an existing `macaroon_secret_key` with a new one
+> will lead to invalidation of access tokens for all guest users. It will also
+> break unsubscribe links in emails sent before the change. An unlucky user
+> might encounter a broken SSO login flow and would have to start again.
+
 Example configuration:
 ```yaml
 macaroon_secret_key: <PRIVATE STRING>
@@ -3194,6 +3207,9 @@ _Added in Synapse 1.121.0._
 A secret which is used to calculate HMACs for form values, to stop
 falsification of values. Must be specified for the User Consent
 forms to work.
+
+Replacing an existing `form_secret` with a new one might break the user consent
+page for an unlucky user and require them to reopen the page from a new link.
 
 Example configuration:
 ```yaml
@@ -3562,6 +3578,24 @@ Options for each entry include:
    and exchanging the token. Valid values are: `auto`, `always`, or `never`. Defaults
    to `auto`, which uses PKCE if supported during metadata discovery. Set to `always`
    to force enable PKCE or `never` to force disable PKCE.
+
+* `id_token_signing_alg_values_supported`: List of the JWS signing algorithms (`alg`
+  values) that are supported for signing the `id_token`.
+
+  This is *not* required if `discovery` is disabled. We default to supporting `RS256` in
+  the downstream usage if no algorithms are configured here or in the discovery
+  document.
+
+  According to the spec, the algorithm `"RS256"` MUST be included. The absolute rigid
+  approach would be to reject this provider as non-compliant if it's not included but we
+  simply allow whatever and see what happens (you're the one that configured the value
+  and cooperating with the identity provider).
+
+  The `alg` value `"none"` MAY be supported but can only be used if the Authorization
+  Endpoint does not include `id_token` in the `response_type` (ex.
+  `/authorize?response_type=code` where `none` can apply,
+  `/authorize?response_type=code%20id_token` where `none` can't apply) (such as when
+  using the Authorization Code Flow).
 
 * `scopes`: list of scopes to request. This should normally include the "openid"
    scope. Defaults to `["openid"]`.
@@ -4442,6 +4476,9 @@ HTTP requests from workers.
 
 The default, this value is omitted (equivalently `null`), which means that
 traffic between the workers and the main process is not authenticated.
+
+Replacing an existing `worker_replication_secret` with a new one will break
+communication with all workers that have not yet updated their secret.
 
 Example configuration:
 ```yaml
