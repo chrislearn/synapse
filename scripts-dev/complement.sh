@@ -117,15 +117,15 @@ fi
 # Change to the repository root
 cd "$(dirname $0)/.."
 
-# Check for a user-specified Complement checkout
-if [[ -z "$COMPLEMENT_DIR" ]]; then
-  COMPLEMENT_REF=${COMPLEMENT_REF:-main}
-  echo "COMPLEMENT_DIR not set. Fetching Complement checkout from ${COMPLEMENT_REF}..."
-  wget -Nq https://github.com/matrix-org/complement/archive/${COMPLEMENT_REF}.tar.gz
-  tar -xzf ${COMPLEMENT_REF}.tar.gz
-  COMPLEMENT_DIR=complement-${COMPLEMENT_REF}
-  echo "Checkout available at 'complement-${COMPLEMENT_REF}'"
-fi
+# # Check for a user-specified Complement checkout
+# if [[ -z "$COMPLEMENT_DIR" ]]; then
+#   COMPLEMENT_REF=${COMPLEMENT_REF:-main}
+#   echo "COMPLEMENT_DIR not set. Fetching Complement checkout from ${COMPLEMENT_REF}..."
+#   wget -Nq https://github.com/matrix-org/complement/archive/${COMPLEMENT_REF}.tar.gz
+#   tar -xzf ${COMPLEMENT_REF}.tar.gz
+#   COMPLEMENT_DIR=complement-${COMPLEMENT_REF}
+#   echo "Checkout available at 'complement-${COMPLEMENT_REF}'"
+# fi
 
 if [ -n "$use_editable_synapse" ]; then
     if [[ -e synapse/synapse_rust.abi3.so ]]; then
@@ -294,6 +294,19 @@ export PASS_SYNAPSE_LOG_TESTING=1
 
 # Run the tests!
 echo "Images built; running complement with ${extra_test_args[@]} $@ ${test_packages[@]}"
-cd "$COMPLEMENT_DIR"
+# cd "../complement"
 
-go test -v -tags "synapse_blacklist" -count=1 "${extra_test_args[@]}" "$@" "${test_packages[@]}"
+env -C "../complement" \
+go test -v -tags "synapse_blacklist" -count=1 "${extra_test_args[@]}" -run "TestOutboundFederationProfile" -json "${test_packages[@]}"| tee "test_results.log.jsonl"
+set -o pipefail
+
+# Post-process the results into an easy-to-compare format
+cat "test_results.log.jsonl" | jq -c '
+    select(
+        (.Action == "pass" or .Action == "fail" or .Action == "skip")
+        and .Test != null
+    ) | {Action: .Action, Test: .Test}
+    ' | sort > "test_results.jsonl"
+
+cat "test_results.log.jsonl" | jq -c '.Output' | sed 's/^"//;s/"$//;s/\\\"/\"/g' > "test_results.log"
+rm -rf "test_results.log.jsonl"

@@ -1,0 +1,2 @@
+{"Action":"fail","Test":"TestOutboundFederationProfile"}
+{"Action":"fail","Test":"TestOutboundFederationProfile/Outbound_federation_can_query_profile_data"}
