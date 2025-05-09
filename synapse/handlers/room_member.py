@@ -983,9 +983,12 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
                             old_state.internal_metadata.stream_ordering,
                         )
 
+                print("OOOOOOOOOOOOOOOOld membership", old_membership,  "          action", action, old_membership in ["ban", "leave"], action == "kick")
                 if old_membership in ["ban", "leave"] and action == "kick":
+                    print("==========================403 error===================")
                     raise AuthError(403, "The target user is not in the room")
 
+                print("========================bbb===================")
                 # we don't allow people to reject invites to the server notice
                 # room, but they can leave it once they are joined.
                 if (

@@ -716,10 +716,12 @@ def _is_membership_change_allowed(
                 errcode=Codes.INSUFFICIENT_POWER,
             )
     elif room_version.knock_join_rule and Membership.KNOCK == membership:
+        print("jjjjjjjjjjjjjjjjjoin_rule", join_rule, "  room_version.knock_restricted_join_rule:", room_version.knock_restricted_join_rule)
         if join_rule != JoinRules.KNOCK and (
             not room_version.knock_restricted_join_rule
             or join_rule != JoinRules.KNOCK_RESTRICTED
         ):
+            print("jjjddddddddddddddddd")
             raise AuthError(403, "You don't have permission to knock")
         elif target_user_id != event.user_id:
             raise AuthError(403, "You cannot knock for other users")
