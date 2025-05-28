@@ -269,7 +269,10 @@ class FederationEventHandler:
         # Try to fetch any missing prev events to fill in gaps in the graph
         prevs = set(pdu.prev_event_ids())
         seen = await self._store.have_events_in_timeline(prevs)
+        print("mmmmmmmmmmmprevs: ", prevs)
+        print("mmmmmmmmmmmseen: ", seen)
         missing_prevs = prevs - seen
+        print("mmmmmmmmmmmmissing_prevs: ", missing_prevs)
 
         if missing_prevs:
             # We only backfill backwards to the min depth.
@@ -303,6 +306,7 @@ class FederationEventHandler:
                 # Update the set of things we've seen after trying to
                 # fetch the missing stuff
                 seen = await self._store.have_events_in_timeline(prevs)
+                print("=============seen", seen)
                 missing_prevs = prevs - seen
 
                 if not missing_prevs:
@@ -730,15 +734,18 @@ class FederationEventHandler:
         event_id = pdu.event_id
 
         seen = await self._store.have_events_in_timeline(prevs)
+        print("seen: ", seen)
 
         if not prevs - seen:
             return
 
         latest_frozen = await self._store.get_latest_event_ids_in_room(room_id)
+        print("latest_frozen: ", latest_frozen)
 
         # We add the prev events that we have seen to the latest
         # list to ensure the remote server doesn't give them to us
         latest = seen | latest_frozen
+        print("latest: ", latest)
 
         logger.info(
             "Requesting missing events between %s and %s",
@@ -811,6 +818,7 @@ class FederationEventHandler:
             logger.warning("Failed to get prev_events: %s", e)
             return
 
+        print("Got prev envents:", missing_events)
         logger.info("Got %d prev_events", len(missing_events))
         await self._process_pulled_events(origin, missing_events, backfilled=False)
 
@@ -895,13 +903,16 @@ class FederationEventHandler:
 
         @trace
         async def _process_new_pulled_events(new_events: Collection[EventBase]) -> None:
+            print("_process_new_pulled_events new_events: ", new_events)
             # We want to sort these by depth so we process them and tell clients about
             # them in order. It's also more efficient to backfill this way (`depth`
             # ascending) because one backfill event is likely to be the `prev_event` of
             # the next event we're going to process.
             sorted_events = sorted(new_events, key=lambda x: x.depth)
             for ev in sorted_events:
+                print("???????????????????????????_process_new_pulled_events?   ", ev.event_id)
                 with nested_logging_context(ev.event_id):
+                    print("ddoooooooooooooooooo")
                     await self._process_pulled_event(origin, ev, backfilled=backfilled)
 
         # Check if we've already tried to process these events at some point in the
@@ -1444,6 +1455,7 @@ class FederationEventHandler:
         try:
             await self._check_event_auth(origin, event, context)
         except AuthError as e:
+            print("EEEEEEEEEEEEError")
             # This happens only if we couldn't find the auth events. We'll already have
             # logged a warning, so now we just convert to a FederationError.
             raise FederationError("ERROR", e.code, e.msg, affected=event.event_id)
@@ -1758,7 +1770,7 @@ class FederationEventHandler:
                     # Otherwise, we are somewhat lenient and just persist the event
                     # as rejected, for moderate compatibility with older Synapse
                     # versions.
-                    logger.warning("While validating received event %r: %s", event, e)
+                    logger.warning("While validating received event3 %r: %s", event, e)
                     context.rejected = RejectedReason.OVERSIZED_EVENT
 
             events_and_contexts_to_persist.append((event, context))
@@ -1809,7 +1821,7 @@ class FederationEventHandler:
         try:
             validate_event_for_room_version(event)
         except AuthError as e:
-            logger.warning("While validating received event %r: %s", event, e)
+            logger.warning("While validating received event1 %r: %s", event, e)
             # TODO: use a different rejected reason here?
             context.rejected = RejectedReason.AUTH_ERROR
             return
@@ -1820,7 +1832,7 @@ class FederationEventHandler:
             # Otherwise, we are somewhat lenient and just persist the event
             # as rejected, for moderate compatibility with older Synapse
             # versions.
-            logger.warning("While validating received event %r: %s", event, e)
+            logger.warning("While validating received event2 %r: %s", event, e)
             context.rejected = RejectedReason.OVERSIZED_EVENT
             return
 
@@ -2230,6 +2242,7 @@ class FederationEventHandler:
         event_and_contexts: Sequence[Tuple[EventBase, EventContext]],
         backfilled: bool = False,
     ) -> int:
+        print("persist_events_and_notify  backfilled", backfilled)
         """Persists events and tells the notifier/pushers about them, if
         necessary.
 

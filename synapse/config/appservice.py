@@ -40,6 +40,7 @@ class AppServiceConfig(Config):
 
     def read_config(self, config: JsonDict, **kwargs: Any) -> None:
         self.app_service_config_files = config.get("app_service_config_files", [])
+        print("aaaaaaaaaaaaaaapp_service_config_files", self.app_service_config_files)
         if not isinstance(self.app_service_config_files, list) or not all(
             isinstance(x, str) for x in self.app_service_config_files
         ):
@@ -71,9 +72,11 @@ def load_appservices(
 
     appservices = []
 
+    logger.info(config_files)
     for config_file in config_files:
         try:
             with open(config_file) as f:
+                logger.info("============load appservice=============")
                 appservice = _load_appservice(hostname, yaml.safe_load(f), config_file)
                 if appservice.id in seen_ids:
                     raise ConfigError(
@@ -93,7 +96,7 @@ def load_appservices(
                         )
                     )
                 seen_as_tokens[appservice.token] = config_file
-                logger.info("Loaded application service: %s", appservice)
+                logger.info("Loaded application service: %s  %s", appservice, config_file)
                 appservices.append(appservice)
         except Exception as e:
             logger.error("Failed to load appservice from '%s'", config_file)

@@ -779,6 +779,7 @@ class FederationServer(FederationBase):
         pdu = await self.handler.on_make_leave_request(origin, room_id, user_id)
 
         room_version = await self.store.get_room_version_id(room_id)
+        print("LLLLLeave pdu: ", pdu)
 
         return {"event": pdu.get_templated_pdu_json(), "room_version": room_version}
 
@@ -786,6 +787,7 @@ class FederationServer(FederationBase):
         self, origin: str, content: JsonDict, room_id: str
     ) -> dict:
         logger.debug("on_send_leave_request: content: %s", content)
+        print("LLLLLeave event: ", content)
         await self._on_send_membership_event(origin, content, Membership.LEAVE, room_id)
         return {}
 
@@ -974,6 +976,8 @@ class FederationServer(FederationBase):
             )
 
         try:
+            print("=============event will validate: ", event.__dict__)
+            print("======================================")
             event = await self._check_sigs_and_hash(room_version, event)
         except InvalidEventSignatureError as e:
             errmsg = f"event id {event.event_id}: {e}"

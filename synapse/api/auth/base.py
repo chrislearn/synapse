@@ -318,6 +318,7 @@ class BaseAuth:
         DEVICE_ID_ARG_NAME = b"org.matrix.msc3202.device_id"
 
         app_service = self.store.get_app_service_by_token(access_token)
+        print("======================app service   ", app_service)
         if app_service is None:
             return None
 

@@ -1526,6 +1526,7 @@ class FederationClient(FederationBase):
                 min_depth=min_depth,
                 timeout=timeout,
             )
+            print("mmmmissing event: ", content)
 
             room_version = await self.store.get_room_version(room_id)
 

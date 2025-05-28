@@ -54,6 +54,7 @@ logger = logging.getLogger(__name__)
 def _make_exclusive_regex(
     services_cache: List[ApplicationService],
 ) -> Optional[Pattern]:
+    print("=====eeexclusive_user_regex", services_cache)
     # We precompile a regex constructed from all the regexes that the AS's
     # have registered for exclusive users.
     exclusive_user_regexes = [
@@ -79,6 +80,8 @@ class ApplicationServiceWorkerStore(RoomMemberWorkerStore):
         db_conn: LoggingDatabaseConnection,
         hs: "HomeServer",
     ):
+        logger.info("llllllllload_appservices ")
+        logger.info(hs.config.appservice.app_service_config_files)
         self.services_cache = load_appservices(
             hs.hostname, hs.config.appservice.app_service_config_files
         )

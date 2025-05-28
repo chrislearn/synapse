@@ -513,20 +513,25 @@ class JoinRoomAliasServlet(ResolveRoomIdMixin, TransactionRestServlet):
         room_identifier: str,
         txn_id: Optional[str],
     ) -> Tuple[int, JsonDict]:
+        print("DDDDDDDDDDDDDDDDDDoooooooooooooo")
         content = parse_json_object_from_request(request, allow_empty_body=True)
 
         # twisted.web.server.Request.args is incorrectly defined as Optional[Any]
         args: Dict[bytes, List[bytes]] = request.args  # type: ignore
         # Prefer via over server_name (deprecated with MSC4156)
         remote_room_hosts = parse_strings_from_args(args, "via", required=False)
+        print("rrrrrrrrrremote_room_hosts", remote_room_hosts)
         if remote_room_hosts is None:
             remote_room_hosts = parse_strings_from_args(
                 args, "server_name", required=False
             )
+            print("remote_room_hosts1", remote_room_hosts)
+
         room_id, remote_room_hosts = await self.resolve_room_id(
             room_identifier,
             remote_room_hosts,
         )
+        print("remote_room_hosts2", remote_room_hosts, "  room:", room_identifier)
 
         await self.room_member_handler.update_membership(
             requester=requester,
@@ -1128,6 +1133,7 @@ class RoomMembershipRestServlet(TransactionRestServlet):
             event_content = {"reason": content["reason"]}
 
         try:
+            print("EEEEEEEEEEEEEEEEEEvent  content", event_content)
             await self.room_member_handler.update_membership(
                 requester=requester,
                 target=target,

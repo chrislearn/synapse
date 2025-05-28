@@ -2366,8 +2366,8 @@ class PersistEventsStore:
                     )
 
             if not event.internal_metadata.is_outlier() and not context.rejected:
-                depth_update = max(event.depth, depth_update)
 
+                depth_update = max(event.depth, depth_update)
         # Then update the `stream_ordering` position to mark the latest event as
         # the front of the room.
         if stream_ordering is not None:

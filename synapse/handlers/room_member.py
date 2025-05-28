@@ -490,6 +490,7 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
                     outlier=outlier,
                 )
                 context = await unpersisted_context.persist(event)
+                print("===========event", event.__dict__)
                 prev_state_ids = await context.get_prev_state_ids(
                     StateFilter.from_types([(EventTypes.Member, user_id)])
                 )
@@ -823,6 +824,7 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
         #
         # This only applies to restricted rooms, but there should be no reason
         # for a client to include it. Unconditionally remove it.
+        print("PPPPPPPPPPPPOp auth user", content)
         content.pop(EventContentFields.AUTHORISING_USER, None)
 
         effective_membership_state = action

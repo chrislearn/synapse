@@ -86,6 +86,8 @@ def encode_canonical_json(value: object) -> bytes:
 def sign_json(
     json_object: Any, signing_key: signedjson.types.SigningKey, signing_name: str
 ) -> Any:
+    print("========xxxxxxxxxxxxxxxxxx==signing_name  ")
+    print("==========json_object  ", json_object.__dict__)
     signatures = json_object.pop("signatures", {})
     unsigned = json_object.pop("unsigned", None)
 
@@ -95,6 +97,7 @@ def sign_json(
     key_id = "%s:%s" % (signing_key.alg, signing_key.version)
     signatures.setdefault(signing_name, {})[key_id] = signature_base64
 
+    print("==========signatures  ", signatures.__dict__)
     json_object["signatures"] = signatures
     if unsigned is not None:
         json_object["unsigned"] = unsigned
