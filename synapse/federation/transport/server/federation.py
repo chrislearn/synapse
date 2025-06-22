@@ -108,6 +108,7 @@ class FederationSendServlet(BaseFederationServerServlet):
             used as the response body.
         """
         # Parse the request
+        print("\n\n\n\n SEEEEEEEEEnd transation ", transaction_id, content)
         try:
             transaction_data = content
 
@@ -636,7 +637,6 @@ class FederationGetMissingEventsServlet(BaseFederationServerServlet):
             limit=limit,
         )
 
-        print("MMMMMMMMMMMMMMisssing results  ", result)
         return 200, result
 
 

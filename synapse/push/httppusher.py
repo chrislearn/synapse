@@ -65,6 +65,7 @@ http_badges_failed_counter = Counter(
 
 
 def tweaks_for_actions(actions: List[Union[str, Dict]]) -> JsonMapping:
+    print("ttttttttttttttttweaks_for_actions actions", actions)
     """
     Converts a list of actions into a `tweaks` dict (which can then be passed to
         the push gateway).
@@ -398,6 +399,8 @@ class HttpPusher(Pusher):
         """
         content = content.copy()
 
+        print("\n\n\n\n\n\n\n\n\n\n ddddddddddispatch_push content", content)
+
         data = self.data_minus_url.copy()
         if default_payload:
             data.setdefault("default_payload", {}).update(default_payload)
@@ -436,6 +439,7 @@ class HttpPusher(Pusher):
         tweaks: JsonMapping,
         badge: int,
     ) -> Union[bool, List[str]]:
+        print("ttttttttttttttttttt dispatch_push_event")
         """Send a notification to the registered push gateway by building it
         from an event.
 

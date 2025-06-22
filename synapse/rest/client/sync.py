@@ -287,6 +287,8 @@ class SyncRestServlet(RestServlet):
         )
 
         logger.debug("Event formatting complete")
+        print("==========args: ", request.args)
+        print("============body: ", response_content)
         return 200, response_content
 
     @trace_with_opname("sync.encode_response")

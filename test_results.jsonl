@@ -1,1 +1,2 @@
-{"Action":"pass","Test":"TestRestrictedRoomsRemoteJoinFailOverInMSC3787Room"}
+{"Action":"pass","Test":"TestSyncTimelineGap"}
+{"Action":"pass","Test":"TestSyncTimelineGap/full"}

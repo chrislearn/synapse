@@ -1801,7 +1801,7 @@ class StreamWorkerStore(EventsWorkerStore, SQLBaseStore):
         )
 
         events_before = await self.get_events_as_list(
-            list(results["before"]["event_ids"]), get_prev_content=True
+            list(results["before"]["event_ids"]), get_prev_content=True                   
         )
 
         events_after = await self.get_events_as_list(

@@ -333,6 +333,7 @@ class BulkPushRuleEvaluator:
         context: EventContext,
         event_id_to_event: Mapping[str, EventBase],
     ) -> None:
+        print("ttttttttttttttttttt _action_for_event_by_user")
         if (
             not event.internal_metadata.is_notifiable()
             or event.room_id in self.hs.config.server.rooms_to_exclude_from_sync
@@ -426,6 +427,9 @@ class BulkPushRuleEvaluator:
         # Pull out any user and room mentions.
         has_mentions = EventContentFields.MENTIONS in event.content
 
+        print("ttttttttttttttt  has_mentions", has_mentions)
+        print("ttttttt  event.content", event.content)
+
         evaluator = PushRuleEvaluator(
             _flatten_dict(event),
             has_mentions,
@@ -473,6 +477,7 @@ class BulkPushRuleEvaluator:
         if not actions_by_user:
             return
 
+        print("tttttttttttt actions_by_user  ", actions_by_user)
         # This is a check for the case where user joins a room without being
         # allowed to see history, and then the server receives a delayed event
         # from before the user joined, which they should not be pushed for

@@ -313,6 +313,7 @@ class FederationEventHandler:
                     logger.info("Found all missing prev_events")
 
             if missing_prevs:
+                print(">>>>>>>>>>>>>>>>>>>>>>  0")
                 # since this event was pushed to us, it is possible for it to
                 # become the only forward-extremity in the room, and we would then
                 # trust its state to be the state for the whole room. This is very
@@ -336,8 +337,10 @@ class FederationEventHandler:
                     affected=pdu.event_id,
                 )
 
+        print(">>>>>>>>>>>>>>>>>>>>>>  1")
         try:
             context = await self._state_handler.compute_event_context(pdu)
+            print(">>>>>>>>>>>>>>>>>>>>>>  2")
             await self._process_received_pdu(origin, pdu, context)
         except PartialStateConflictError:
             # The room was un-partial stated while we were processing the PDU.
@@ -346,6 +349,7 @@ class FederationEventHandler:
                 "Room %s was un-partial stated while processing the PDU, trying again.",
                 room_id,
             )
+            print(">>>>>>>>>>>>>>>>>>>>>>  3")
             context = await self._state_handler.compute_event_context(pdu)
             await self._process_received_pdu(origin, pdu, context)
 
@@ -734,7 +738,7 @@ class FederationEventHandler:
         event_id = pdu.event_id
 
         seen = await self._store.have_events_in_timeline(prevs)
-        print("seen: ", seen)
+        print("xxxxxxxxseen: ", seen)
 
         if not prevs - seen:
             return
@@ -745,7 +749,6 @@ class FederationEventHandler:
         # We add the prev events that we have seen to the latest
         # list to ensure the remote server doesn't give them to us
         latest = seen | latest_frozen
-        print("latest: ", latest)
 
         logger.info(
             "Requesting missing events between %s and %s",
@@ -801,6 +804,7 @@ class FederationEventHandler:
         #
         # All that said: Let's try increasing the timeout to 60s and see what happens.
 
+        print("llllllllllllatest earliest_events_ids: ", latest, "latest_events:", pdu,  "min_depth:", min_depth)
         try:
             missing_events = await self._federation_client.get_missing_events(
                 origin,
@@ -818,7 +822,7 @@ class FederationEventHandler:
             logger.warning("Failed to get prev_events: %s", e)
             return
 
-        print("Got prev envents:", missing_events)
+        print("ggggggggggggggggGot prev envents:", missing_events)
         logger.info("Got %d prev_events", len(missing_events))
         await self._process_pulled_events(origin, missing_events, backfilled=False)
 

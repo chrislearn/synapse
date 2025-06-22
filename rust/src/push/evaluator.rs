@@ -139,6 +139,7 @@ impl PushRuleEvaluator {
         msc3931_enabled: bool,
         msc4210_enabled: bool,
     ) -> Result<Self, Error> {
+        println!("ZZZZZZZZZZZZZZZZZZZZZZZZZZ");
         let body = match flattened_keys.get("content.body") {
             Some(JsonValue::Value(SimpleJsonValue::Str(s))) => s.clone().into_owned(),
             _ => String::new(),
@@ -174,6 +175,7 @@ impl PushRuleEvaluator {
         user_id: Option<&str>,
         display_name: Option<&str>,
     ) -> Vec<Action> {
+        println!("=====run====push_rules: {push_rules:#?}");
         'outer: for (push_rule, enabled) in push_rules.iter() {
             if !enabled {
                 continue;
@@ -230,6 +232,7 @@ impl PushRuleEvaluator {
                 .cloned()
                 .collect();
 
+            println!("=========actions: {actions:#?}  push_rule: {push_rule:#?}");
             return actions;
         }
 
@@ -263,6 +266,7 @@ impl PushRuleEvaluator {
         user_id: Option<&str>,
         display_name: Option<&str>,
     ) -> Result<bool, Error> {
+        println!("\n\n\n\n=====match_condition====condition: {condition:#?}");
         let known_condition = match condition {
             Condition::Known(known) => known,
             Condition::Unknown(_) => {
@@ -330,12 +334,14 @@ impl PushRuleEvaluator {
                     event_property_is.value.clone(),
                 )?,
             KnownCondition::ExactEventPropertyContainsType(exact_event_match) => {
+                println!("=======ExactEventPropertyContainsType==exact_event_match: {exact_event_match:#?}");
                 // The `pattern_type` can either be "user_id" or "user_localpart",
                 // either way if we don't have a `user_id` then the condition can't
                 // match.
                 let user_id = if let Some(user_id) = user_id {
                     user_id
                 } else {
+                    println!("=====false");
                     return Ok(false);
                 };
 
@@ -422,7 +428,9 @@ impl PushRuleEvaluator {
         };
 
         let mut compiled_pattern = get_glob_matcher(pattern, match_type)?;
-        compiled_pattern.is_match(haystack)
+        let r  = compiled_pattern.is_match(haystack);
+        println!("          resutl: {r:?}");
+        r
     }
 
     /// Evaluates a `event_property_is` condition.
@@ -488,9 +496,11 @@ impl PushRuleEvaluator {
         let haystack = if let Some(JsonValue::Array(haystack)) = self.flattened_keys.get(&*key) {
             haystack
         } else {
+            println!("============= return false  key: {key}, value: {value:?},  keys: {:#?}", self.flattened_keys.keys());
             return Ok(false);
         };
 
+        println!("=================key: {key}, value: {value:?}, haystack: {haystack:#?}   {}  {:#?}", haystack.contains(&value),  self.flattened_keys);
         Ok(haystack.contains(&value))
     }
 

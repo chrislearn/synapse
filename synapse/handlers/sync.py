@@ -571,6 +571,7 @@ class SyncHandler:
             )
 
         if timeout == 0 or since_token is None or full_state:
+            print("fffffffffffffffull state current_sync_callback 0", full_state)
             # we are going to return immediately, so don't bother calling
             # notifier.wait_for_events.
             result: Union[
@@ -579,6 +580,7 @@ class SyncHandler:
                 sync_config, sync_version, since_token, full_state=full_state
             )
         else:
+            print("fffffffffffffffull state current_sync_callback 1", full_state)
             # Otherwise, we wait for something to happen and report it to the user.
             async def current_sync_callback(
                 before_token: StreamToken, after_token: StreamToken
@@ -612,6 +614,7 @@ class SyncHandler:
                 lazy_loaded = "false"
             non_empty_sync_counter.labels(sync_label, lazy_loaded).inc()
 
+        print("SSSSSSSSSSSync resutl:", result)
         return result
 
     @overload
@@ -671,6 +674,7 @@ class SyncHandler:
 
             # Go through the `/sync` v2 path
             if sync_version == SyncVersion.SYNC_V2:
+                print("==================sync_version SYNC_V2")
                 sync_result: Union[
                     SyncResult, E2eeSyncResult
                 ] = await self.generate_sync_result(
@@ -678,6 +682,7 @@ class SyncHandler:
                 )
             # Go through the MSC3575 Sliding Sync `/sync/e2ee` path
             elif sync_version == SyncVersion.E2EE_SYNC:
+                print("==================sync_version E2EE_SYNC")
                 sync_result = await self.generate_e2ee_sync_result(
                     sync_config, since_token
                 )
@@ -1300,7 +1305,7 @@ class SyncHandler:
                     logger.debug("...to %r", state_ids)
 
                 # add any member IDs we are about to send into our LruCache
-                for t, event_id in itertools.chain(
+                for t, event_id in itertools.chain( 
                     state_ids.items(), timeline_state.items()
                 ):
                     if t[0] == EventTypes.Member:
@@ -1310,6 +1315,7 @@ class SyncHandler:
         if state_ids:
             state = await self.store.get_events(list(state_ids.values()))
 
+        print("=================compute_state_delta state: ", state)
         return {
             (e.type, e.state_key): e
             for e in await sync_config.filter_collection.filter_room_state(
@@ -1328,6 +1334,7 @@ class SyncHandler:
         timeline_state: StateMap[str],
         joined: bool,
     ) -> StateMap[str]:
+        print("===========_compute_state_delta_for_full_sync, batch: ", batch, " \ntimeline_state:", timeline_state)
         """Calculate the state events to be included in a full sync response.
 
         As with `_compute_state_delta_for_incremental_sync`, the result will include
@@ -1477,6 +1484,7 @@ class SyncHandler:
         members_to_fetch: Optional[Set[str]],
         timeline_state: StateMap[str],
     ) -> StateMap[str]:
+        print("===========_compute_state_delta_for_incremental_sync, batch: ", batch, " \ntimeline_state:", timeline_state)
         """Calculate the state events to be included in an incremental sync response.
 
         If lazy-loading of membership events is enabled (as indicated by
@@ -1867,6 +1875,7 @@ class SyncHandler:
                 newly_left_rooms,
             ) = await self._generate_sync_entry_for_rooms(sync_result_builder)
 
+            print("==========newly_joined_rooms", newly_joined_rooms)
             # Work out which users have joined or left rooms we're in. We use this
             # to build the presence and device_list parts of the sync response in
             # `_generate_sync_entry_for_presence` and
@@ -1936,6 +1945,7 @@ class SyncHandler:
             }
         )
 
+        print("==========joined result", sync_result_builder.joined)
         logger.debug("Sync response calculation complete")
         return SyncResult(
             presence=sync_result_builder.presence,
@@ -2446,9 +2456,11 @@ class SyncHandler:
                 user_id, since_token.account_data_key
             )
         else:
+            print("=======_get_room_changes_for_initial_sync  ", ignored_users)
             room_changes = await self._get_room_changes_for_initial_sync(
                 sync_result_builder, ignored_users
             )
+            print("=======room_changes: ", room_changes)
             tags_by_room = await self.store.get_tags_for_user(user_id)
 
         log_kv({"rooms_changed": len(room_changes.room_entries)})
@@ -2786,6 +2798,7 @@ class SyncHandler:
             membership_list=Membership.LIST,
             excluded_rooms=sync_result_builder.excluded_room_ids,
         )
+        print("============room_list", room_list)
 
         room_entries = []
         invited = []
@@ -3016,6 +3029,7 @@ class SyncHandler:
                 )
 
             if room_builder.rtype == "joined":
+                print("ttttttttttttttttttt 0")
                 unread_notifications: Dict[str, int] = {}
                 room_sync = JoinedSyncResult(
                     room_id=room_id,
@@ -3032,6 +3046,7 @@ class SyncHandler:
                 if room_sync or always_include:
                     notifs = await self.unread_notifs_for_room_id(room_id, sync_config)
 
+                    print("ttttttttttttttttttt  notifs", notifs)
                     # Notifications for the main timeline.
                     notify_count = notifs.main_timeline.notify_count
                     highlight_count = notifs.main_timeline.highlight_count
@@ -3082,6 +3097,7 @@ class SyncHandler:
 
 
 def _action_has_highlight(actions: List[JsonDict]) -> bool:
+    print("ttttttttttttttttttt _action_has_highlight")
     for action in actions:
         try:
             if action.get("set_tweak", None) == "highlight":
@@ -3111,6 +3127,8 @@ def _calculate_state(
             or not.  assumes that timeline_start has already been filtered to
             include only the members the client needs to know about.
     """
+    print("timeline_contains: ", timeline_contains, "\ntimeline_start: ", timeline_start)
+    print("timeline_end: ", timeline_end, "\nprevious_timeline_end: ", previous_timeline_end, "\nlazy_load_members: ", lazy_load_members)
     event_id_to_state_key = {
         event_id: state_key
         for state_key, event_id in itertools.chain(

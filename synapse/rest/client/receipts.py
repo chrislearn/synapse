@@ -62,6 +62,7 @@ class ReceiptRestServlet(RestServlet):
     async def on_POST(
         self, request: SynapseRequest, room_id: str, receipt_type: str, event_id: str
     ) -> Tuple[int, JsonDict]:
+        print("\n\n\n===AAAAAAAAAAAAAAAA 0")
         requester = await self.auth.get_user_by_req(request)
 
         if not RoomID.is_valid(room_id) or not event_id.startswith(EventID.SIGIL):
@@ -73,6 +74,7 @@ class ReceiptRestServlet(RestServlet):
                 f"Receipt type must be {', '.join(self._known_receipt_types)}",
             )
 
+        print("\n\n\n===AAAAAAAAAAAAAAAA 1")
         body = parse_json_object_from_request(request)
 
         # Pull the thread ID, if one exists.
@@ -100,18 +102,21 @@ class ReceiptRestServlet(RestServlet):
                     f"event_id {event_id} is not related to thread {thread_id}",
                     Codes.INVALID_PARAM,
                 )
+        print("\n\n\n===AAAAAAAAAAAAAAAA 2")
 
         await self.presence_handler.bump_presence_active_time(
             requester.user, requester.device_id
         )
 
         if receipt_type == ReceiptTypes.FULLY_READ:
+            print("\n\n\nAAAAAAAAAAAAAAAA 0")
             await self.read_marker_handler.received_client_read_marker(
                 room_id,
                 user_id=requester.user.to_string(),
                 event_id=event_id,
             )
         else:
+            print("\n\n\nAAAAAAAAAAAAAAAA 1")
             await self.receipts_handler.received_client_receipt(
                 room_id,
                 receipt_type,

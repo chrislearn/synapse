@@ -167,6 +167,7 @@ class ReceiptsHandler:
         self.notifier.on_new_event(
             StreamKeyType.RECEIPT, max_batch_id, rooms=affected_room_ids
         )
+        print("==========receipts_persisted: ", receipts_persisted)
         # Note that the min here shouldn't be relied upon to be accurate.
         await self.hs.get_pusherpool().on_new_receipts(
             {r.user_id for r in receipts_persisted}
@@ -201,6 +202,7 @@ class ReceiptsHandler:
         )
 
         is_new = await self._handle_new_receipts([receipt])
+        print("IIIIIIIIs new ", is_new)
         if not is_new:
             return
 
