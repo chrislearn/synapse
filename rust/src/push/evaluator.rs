@@ -232,7 +232,6 @@ impl PushRuleEvaluator {
                 .cloned()
                 .collect();
 
-            println!("=========actions: {actions:#?}  push_rule: {push_rule:#?}");
             return actions;
         }
 
@@ -266,7 +265,6 @@ impl PushRuleEvaluator {
         user_id: Option<&str>,
         display_name: Option<&str>,
     ) -> Result<bool, Error> {
-        println!("\n\n\n\n=====match_condition====condition: {condition:#?}");
         let known_condition = match condition {
             Condition::Known(known) => known,
             Condition::Unknown(_) => {

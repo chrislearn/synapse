@@ -821,8 +821,8 @@ class FederationEventHandler:
             # events anyway, it is safe to simply log the error and continue.
             logger.warning("Failed to get prev_events: %s", e)
             return
-
-        print("ggggggggggggggggGot prev envents:", missing_events)
+        for ev in missing_events:
+            print("ggggggggggggggggGot  envent:", ev.event_id, "  prev:", ev.prev_event_ids(), "  ", ev.get_dict())
         logger.info("Got %d prev_events", len(missing_events))
         await self._process_pulled_events(origin, missing_events, backfilled=False)
 
@@ -1008,8 +1008,9 @@ class FederationEventHandler:
         )
 
         event_id = event.event_id
-
+        logger.info("====================0");
         try:
+            logger.info("====================1");
             self._sanity_check_event(event)
         except SynapseError as err:
             logger.warning("Event %s failed sanity check: %s", event_id, err)
@@ -1020,9 +1021,11 @@ class FederationEventHandler:
 
         try:
             try:
+                logger.info("====================3");
                 context = await self._compute_event_context_with_maybe_missing_prevs(
                     origin, event
                 )
+                logger.info("====================4");
                 await self._process_received_pdu(
                     origin,
                     event,
@@ -1032,18 +1035,21 @@ class FederationEventHandler:
             except PartialStateConflictError:
                 # The room was un-partial stated while we were processing the event.
                 # Try once more, with full state this time.
+                logger.info("====================5--0");
                 context = await self._compute_event_context_with_maybe_missing_prevs(
                     origin, event
                 )
 
                 # We ought to have full state now, barring some unlikely race where we left and
                 # rejoned the room in the background.
+                logger.info("====================5");
                 if context.partial_state:
                     raise AssertionError(
                         f"Event {event.event_id} still has a partial resolved state "
                         f"after room {event.room_id} was un-partial stated"
                     )
 
+                logger.info("====================6");
                 await self._process_received_pdu(
                     origin,
                     event,
@@ -1063,9 +1069,11 @@ class FederationEventHandler:
             # This avoids a cascade of backoff for all events in the DAG downstream from
             # one event backoff upstream.
         except FederationError as e:
+            logger.info("====================7");
             await self._store.record_event_failed_pull_attempt(
                 event.room_id, event_id, str(e)
             )
+            logger.info("====================8");
 
             if e.code == 403:
                 logger.warning("Pulled event %s failed history check.", event_id)
@@ -1114,12 +1122,16 @@ class FederationEventHandler:
             FederationError if we fail to get the state from the remote server after any
                 missing `prev_event`s.
         """
+        
+        print("____compute_event_context_with_maybe_missing_prevs  0")
+
         room_id = event.room_id
         event_id = event.event_id
 
         prevs = set(event.prev_event_ids())
         seen = await self._store.have_events_in_timeline(prevs)
         missing_prevs = prevs - seen
+        print("____compute_event_context_with_maybe_missing_prevs missing_prevs: ", missing_prevs, "   all prevs:", prevs)
 
         # If we've already recently attempted to pull this missing event, don't
         # try it again so soon. Since we have to fetch all of the prev_events, we can
@@ -1155,6 +1167,7 @@ class FederationEventHandler:
         # resolve them to find the correct state at the current event.
 
         try:
+            print("____compute_event_context_with_maybe_missing_prevs  2")
             # Determine whether we may be about to retrieve partial state
             # Events may be un-partial stated right after we compute the partial state
             # flag, but that's okay, as long as the flag errs on the conservative side.
@@ -1167,6 +1180,7 @@ class FederationEventHandler:
             # Ask the remote server for the states we don't
             # know about
             for p in missing_prevs:
+                print("____compute_event_context_with_maybe_missing_prevs  3")
                 logger.info("Requesting state after missing prev_event %s", p)
 
                 with nested_logging_context(p):
@@ -1179,8 +1193,10 @@ class FederationEventHandler:
                         )
                     )
 
+                    print("____compute_event_context_with_maybe_missing_prevs  4",remote_state_map)
                     state_maps.append(remote_state_map)
 
+            print("____compute_event_context_with_maybe_missing_prevs  5", state_maps)
             # Get the state of the events we know about. We do this *after*
             # trying to fetch missing state over federation as that might fail
             # and then we can skip loading the local state.
@@ -1188,6 +1204,7 @@ class FederationEventHandler:
                 room_id, seen, await_full_state=False
             )
             state_maps.extend(ours.values())
+            print("____compute_event_context_with_maybe_missing_prevs  6", state_maps)
 
             # we don't need this any more, let's delete it.
             del ours
@@ -1425,6 +1442,7 @@ class FederationEventHandler:
         context: EventContext,
         backfilled: bool = False,
     ) -> None:
+        print("???==========_process_received_pdu==========")
         """Called when we have a new non-outlier event.
 
         This is called when we have a new event to add to the room DAG. This can be
@@ -1456,6 +1474,7 @@ class FederationEventHandler:
         logger.debug("Processing event: %s", event)
         assert not event.internal_metadata.outlier
 
+        print("ppp_process_received_pdu==========0")
         try:
             await self._check_event_auth(origin, event, context)
         except AuthError as e:
@@ -1464,22 +1483,28 @@ class FederationEventHandler:
             # logged a warning, so now we just convert to a FederationError.
             raise FederationError("ERROR", e.code, e.msg, affected=event.event_id)
 
+        print("ppp_process_received_pdu==========1")
         if not backfilled and not context.rejected:
             # For new (non-backfilled and non-outlier) events we check if the event
             # passes auth based on the current state. If it doesn't then we
             # "soft-fail" the event.
+            print("ppp_process_received_pdu==========2")
             await self._check_for_soft_fail(event, context=context, origin=origin)
 
+        print("ppp_process_received_pdu==========3")
         await self._run_push_actions_and_persist_event(event, context, backfilled)
 
         if backfilled or context.rejected:
+            print("ppp_process_received_pdu==========4")
             return
 
+        print("ppp_process_received_pdu==========5")
         await self._maybe_kick_guest_users(event)
 
         # For encrypted messages we check that we know about the sending device,
         # if we don't then we mark the device cache for that user as stale.
         if event.type == EventTypes.Encrypted:
+            print("ppp_process_received_pdu==========6")
             device_id = event.content.get("device_id")
             sender_key = event.content.get("sender_key")
 

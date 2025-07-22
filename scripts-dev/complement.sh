@@ -298,7 +298,7 @@ echo "Images built; running complement with ${extra_test_args[@]} $@ ${test_pack
 
 env -C "../complement" \
     COMPLEMENT_ALWAYS_PRINT_SERVER_LOGS=1 \
-go test -v -tags "synapse_blacklist" -count=1 "${extra_test_args[@]}" -run "TestSyncTimelineGap/full" -json "${test_packages[@]}"| tee "test_results.log.jsonl"
+go test -v -tags "synapse_blacklist" -count=1 "${extra_test_args[@]}" -run "TestSyncOmitsStateChangeOnFilteredEvents" -json "${test_packages[@]}"| tee "test_results.log.jsonl"
 set -o pipefail
 
 # Post-process the results into an easy-to-compare format
